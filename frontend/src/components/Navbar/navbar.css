@@ -1,0 +1,34 @@
+
+.navbar {
+  padding: 15px 35px;
+  display: flex;
+  justify-content: space-between; 
+  align-items: center;
+
+}
+
+
+.logo {
+  width: 200px;
+  
+}
+
+.navbar-menu {
+  display: flex;
+  list-style: none;
+  gap: 25px;
+  margin-left: -100px;
+}
+
+.navbar-button button{
+    background: transparent;
+    border: none;
+    font-size: 14px;
+    border: 1px solid rgb(0, 0, 0);
+    padding: 10px 30px;
+    border-radius: 50px;
+    cursor: pointer;
+    
+  
+
+}
