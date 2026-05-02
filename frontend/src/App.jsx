@@ -1,13 +1,20 @@
 import React from 'react'
-import Navbar from './components/Navbar/navbar'
-import Header from './components/Header/header'
+import { Routes, Route, useLocation } from 'react-router-dom' 
+import Navbar from './components/HomeNavbar/navbar'
+import Header from './components/Home/home'
+import Login from './components/Login/Login'
 
 const App = () => {
+  const location = useLocation();
+
   return (
-    <div className ='app'>
-      <Navbar></Navbar>
-      <Header></Header>
+    <div className='app'>
+      {location.pathname !== "/login" && <Navbar />}
       
+      <Routes>
+        <Route path='/' element={<Header />} />
+        <Route path='/login' element={<Login />} />
+      </Routes>
     </div>
   )
 }
