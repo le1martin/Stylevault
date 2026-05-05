@@ -78,3 +78,51 @@
   color: #000;
   text-decoration-thickness: 2px;
 }
+
+/* Social login */
+
+.social-login-separator {
+  display: flex;
+  align-items: center;
+  margin: 20px 0;
+  color: #888;
+  font-size: 14px;
+}
+
+.social-login-separator hr {
+  flex: 1;
+  border: 0;
+  border-top: 1px solid #ddd;
+}
+
+.social-login-separator span {
+  padding: 0 10px;
+}
+
+.social-login-options {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.social-btn {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease;
+}
+
+.social-btn:hover {
+  background-color: #f9f9f9;
+}
+
+.social-btn img {
+  width: 20px;
+  height: 20px;
+}
