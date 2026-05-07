@@ -80,7 +80,6 @@
 }
 
 /* Social login */
-
 .social-login-separator {
   display: flex;
   align-items: center;
@@ -125,4 +124,38 @@
 .social-btn img {
   width: 20px;
   height: 20px;
+}
+
+.custom-popup {
+  position: fixed;
+  bottom: 40px; 
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30, 30, 30, 0.9);
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  animation: slideUpInOut 3s ease-in-out forwards;
+}
+
+@keyframes slideUpInOut {
+  0% { 
+    opacity: 0; 
+    bottom: -50px;
+  }
+  10% { 
+    opacity: 1; 
+    bottom: 30px;
+  }
+  90% { 
+    opacity: 1; 
+    bottom: 30px; 
+  }
+  100% { 
+    opacity: 0; 
+    bottom: -50px;
+  }
 }

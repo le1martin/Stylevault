@@ -5,20 +5,17 @@
   flex-wrap: wrap;
   justify-content: space-between; 
   align-items: center;
-
 }
 
 
 .logo {
   width: 200px;
-  
 }
 
 .navbar-menu {
   display: flex;
   list-style: none;
   gap: 25px;
-  
 }
 
 .navbar-button button{
@@ -29,7 +26,8 @@
     padding: 10px 30px;
     border-radius: 50px;
     cursor: pointer;
-    
-  
+}
 
+html {
+    scroll-behavior: smooth;
 }

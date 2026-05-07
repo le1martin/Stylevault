@@ -1,17 +1,20 @@
 import React from 'react'
 import './navbar.css'
 import { assets } from '../../assets/assets'
-import { Link } from 'react-router-dom' 
+import { Link } from 'react-router-dom'
 
 const Navbar = () => {
   return (
     <div className="navbar">
-      <Link to='/'><img src={assets.logo} className="logo" /></Link>
-      
+
+      <Link to='/'>
+        <img src={assets.logo} className="logo" />
+      </Link>
+
       <ul className="navbar-menu">
-        <li>the method</li>
-        <li>features</li>
-        <li>community</li>
+        <li><a href="#about">about</a></li>
+        <li><a href="#features">features</a></li>
+        <li><a href="#contact">contact</a></li>
       </ul>
 
       <div className="navbar-button">
@@ -19,6 +22,7 @@ const Navbar = () => {
           <button>join now</button>
         </Link>
       </div>
+
     </div>
   )
 }
