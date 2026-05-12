@@ -35,7 +35,7 @@ const Home = () => {
       </div>
 
       <div id="about" className="about-home">
-        <h2>About Stylevault</h2>
+        <h2>Stylevault</h2>
         <p>
           Stylevault is your personal digital wardrobe designed to simplify how you dress.
           Instead of guessing what to wear, you can organize your clothing, create outfits,
@@ -62,7 +62,7 @@ const Home = () => {
       </div>
 
       <div id="features" className="features-home">
-        <h2>Core Features</h2>
+        <h2>Features </h2>
 
         <div className="features-cards">
           <div className="feature-card">

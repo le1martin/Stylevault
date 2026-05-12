@@ -1,71 +1,88 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { auth } from '../../firebase';
-import { signOut, onAuthStateChanged } from 'firebase/auth';
-import './main.css';
+import React, { useState } from 'react'
+import './main.css'
+import { assets } from '../../assets/assets'
 
 const Main = () => {
-  const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('vault');
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-        setLoading(false);
-      } else {
-        navigate('/login');
-      }
-    });
-    return () => unsubscribe();
-  }, [navigate]);
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      navigate('/'); 
-    } catch (error) {
-      console.error("Logout Error:", error);
-    }
+  const handleTabClick = (tabId) => {
+    setActiveTab(tabId);
   };
 
-  if (loading) {
-    return (
-      <div className="main-container">
-        <p>Loading your vault...</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="main-container">
-      <div className="main-content">
-        <header className="main-header">
-          <h1>Your Stylevault</h1>
-          <p>Welcome back, {user.email}</p>
-        </header>
+    <div className="main-page">
 
-        <section className="vault-dashboard">
-          <div className="vault-stats">
-            <div className="stat-card">
-              <h3>Total Outfits</h3>
-              <p>0</p>
-            </div>
-            <div className="stat-card">
-              <h3>Recently Added</h3>
-              <p>None yet</p>
-            </div>
-          </div>
+      <aside className="sidebar">
 
-          <div className="main-actions">
-            <button className="btn primary">Add New Fit</button>
-            <button className="btn secondary" onClick={handleLogout}>Logout</button>
-          </div>
-        </section>
-      </div>
+        <div className="logo-section">
+          <img src={assets.site} alt="logo" className="logo-img" />
+        </div>
+
+        <nav className="main-menu">
+          <ul className="nav-list">
+
+            <li>
+              <a
+                href="#vault"
+                className={activeTab === 'vault' ? 'active' : ''}
+                onClick={() => handleTabClick('vault')}
+                data-tooltip="Your Vault"
+              >
+                <img src={assets.vault} alt="vault" className="nav-icon" />
+              </a>
+            </li>
+
+            <li>
+              <a
+                href="#community"
+                className={activeTab === 'community' ? 'active' : ''}
+                onClick={() => handleTabClick('community')}
+                data-tooltip="Community"
+              >
+                <img src={assets.community} alt="community" className="nav-icon" />
+              </a>
+            </li>
+
+            <li>
+              <a
+                href="#recommendations"
+                className={activeTab === 'recommendations' ? 'active' : ''}
+                onClick={() => handleTabClick('recommendations')}
+                data-tooltip="Style Bot"
+              >
+                <img src={assets.recommendation} alt="recommendations" className="nav-icon" />
+              </a>
+            </li>
+
+          </ul>
+        </nav>
+
+        <div className="sidebar-footer">
+          <a
+            href="#settings"
+            className={activeTab === 'settings' ? 'active' : ''}
+            onClick={() => handleTabClick('settings')}
+            data-tooltip="Settings"
+          >
+            <img
+              src={assets.settings}
+              alt="settings"
+              className="nav-icon"
+            />
+          </a>
+        </div>
+
+      </aside>
+
+      <main className="content">
+        {activeTab === 'vault' && <div>Your Vault</div>}
+        {activeTab === 'community' && <div>Community Feed</div>}
+        {activeTab === 'recommendations' && <div>Style Bot</div>}
+        {activeTab === 'settings' && <div>Settings Page</div>}
+      </main>
+
     </div>
-  );
-};
+  )
+}
 
-export default Main;
+export default Main
