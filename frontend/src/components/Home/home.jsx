@@ -1,16 +1,17 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './home.css'
 import { assets } from '../../assets/assets'
 
 const Home = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
+  const [copied, setCopied] = useState(false)
 
   const copyEmail = () => {
-    navigator.clipboard.writeText("stylevault@gmail.com");
-    alert("Email copied to clipboard!"); 
-  };
-  
+    navigator.clipboard.writeText("stylevault@gmail.com")
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
 
   return (
     <>
@@ -41,7 +42,6 @@ const Home = () => {
           Instead of guessing what to wear, you can organize your clothing, create outfits,
           and keep track of your style all in one place.
         </p>
-  
 
         <div className="about-cards">
           <div className="about-card">
@@ -62,7 +62,7 @@ const Home = () => {
       </div>
 
       <div id="features" className="features-home">
-        <h2>Features </h2>
+        <h2>Features</h2>
 
         <div className="features-cards">
           <div className="feature-card">
@@ -74,6 +74,7 @@ const Home = () => {
             <h3>📊 Wear Insights</h3>
             <p>Track what you wear most and discover your real style habits.</p>
           </div>
+
           <div className="feature-card">
             <h3>🤖 AI Style Assistant</h3>
             <p>
@@ -83,17 +84,20 @@ const Home = () => {
         </div>
       </div>
 
-      <footer id="contact" className="footer">
-        <div className="footer-content">
-          <p>© 2026 Stylevault. All rights reserved.</p>
-          <p onClick={copyEmail} className="footer-email">
-            stylevault@gmail.com
-          </p>
-          
-        </div>
-      </footer>
+     <footer id="contact" className="footer">
+      <div className="footer-content">
+        <p>© 2026 Stylevault. All rights reserved.</p>
+
+      <div className="email-wrap" onClick={copyEmail}>
+        <p className="footer-email">stylevault@gmail.com</p>
+        <span className={`copied-msg ${copied ? 'show' : ''}`}>
+          {copied ? 'Copied!' : ''}
+      </span>
+    </div>
+  </div>
+</footer>
     </>
   )
 }
 
-export default Home;
+export default Home
