@@ -12,4 +12,4 @@ Open two terminal windows:
 ![main](screenshots/main1.png)
 ![join](screenshots/join.png)
 ![vault](screenshots/vault.png)
-
+![community](screenshots/community.png)
