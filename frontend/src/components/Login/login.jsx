@@ -6,8 +6,11 @@ import { useNavigate } from 'react-router-dom';
 import { 
   signInWithPopup, 
   signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword 
+  createUserWithEmailAndPassword,
+  updateProfile
 } from 'firebase/auth';
+
+const API_BASE_URL = 'http://localhost:5000';
 
 const Login = () => { 
   const [currState, setCurrState] = useState("Login");
@@ -23,11 +26,36 @@ const Login = () => {
     setTimeout(() => setPopup({ show: false, message: "" }), 3000);
   };
 
+  // Helper function to sync sign-up display name with Flask backend
+  const syncProfileToBackend = async (userId, displayName) => {
+    try {
+      const formData = new FormData();
+      formData.append('display_name', displayName);
+
+      await fetch(`${API_BASE_URL}/api/profile`, {
+        method: 'PUT',
+        headers: { 'X-User-ID': userId },
+        body: formData,
+      });
+    } catch (err) {
+      console.error("Failed to sync profile to backend:", err);
+    }
+  };
+
   const handleEmailAuth = async (e) => {
     e.preventDefault(); 
     try {
       if (currState === "Sign Up") {
-        await createUserWithEmailAndPassword(auth, email, password);
+        // 1. Create account in Firebase
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // 2. Attach display name to Firebase Auth profile & sync to Flask
+        if (name.trim()) {
+          await updateProfile(user, { displayName: name.trim() });
+          await syncProfileToBackend(user.uid, name.trim());
+        }
+
         triggerPopup("Account created successfully!");
       } else {
         await signInWithEmailAndPassword(auth, email, password);
@@ -39,7 +67,7 @@ const Login = () => {
     } catch (error) {
       console.error("Auth Error Code:", error.code);
       if (error.code === 'auth/wrong-password') {
-        triggerPopup("check the pass"); 
+        triggerPopup("Check the password"); 
       } else if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
         triggerPopup("Account not found. Please sign up.");
       } else {
@@ -50,19 +78,25 @@ const Login = () => {
 
   const handleFacebookLogin = async () => {
     try {
-      await signInWithPopup(auth, facebookProvider);
+      const res = await signInWithPopup(auth, facebookProvider);
+      if (res.user?.displayName) {
+        await syncProfileToBackend(res.user.uid, res.user.displayName);
+      }
       triggerPopup("Logged in with Facebook");
       setTimeout(() => navigate('/main'), 1500);
     } catch (error) { console.error(error); }
-  }
+  };
 
   const handleGoogleLogin = async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
+      const res = await signInWithPopup(auth, googleProvider);
+      if (res.user?.displayName) {
+        await syncProfileToBackend(res.user.uid, res.user.displayName);
+      }
       triggerPopup("Logged in with Google");
       setTimeout(() => navigate('/main'), 1500);
     } catch (error) { console.error(error); }
-  }
+  };
 
   return (
     <div className="login-page">
@@ -83,10 +117,28 @@ const Login = () => {
         
         <div className="login-inputs">
           {currState === "Sign Up" && (
-            <input type="text" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} required />
+            <input 
+              type="text" 
+              placeholder="Your name" 
+              value={name} 
+              onChange={(e) => setName(e.target.value)} 
+              required 
+            />
           )}
-          <input type="email" placeholder="Your email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <input 
+            type="email" 
+            placeholder="Your email" 
+            value={email} 
+            onChange={(e) => setEmail(e.target.value)} 
+            required 
+          />
+          <input 
+            type="password" 
+            placeholder="Password" 
+            value={password} 
+            onChange={(e) => setPassword(e.target.value)} 
+            required 
+          />
         </div>
 
         <button type="submit" className="btn">
