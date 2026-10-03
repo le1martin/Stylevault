@@ -13,3 +13,4 @@ Open two terminal windows:
 ![join](screenshots/join.png)
 ![vault](screenshots/vault.png)
 ![community](screenshots/community.png)
+![profile](screenshots/profile.png)
