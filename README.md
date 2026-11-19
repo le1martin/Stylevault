@@ -10,7 +10,9 @@ Open two terminal windows:
 
 # Screenshots
 ![main](screenshots/main1.png)
-![join](screenshots/join.png)
+![join](screenshots/login.png)
 ![vault](screenshots/vault.png)
 ![community](screenshots/community.png)
-![profile](screenshots/profile.png)
+![stylebot](screenshots/stylebot.png)
+![fall](screenshots/fall.png)
+![settings](screenshots/settings.png)

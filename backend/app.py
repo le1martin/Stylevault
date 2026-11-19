@@ -1,4 +1,6 @@
 import os
+import logging
+import requests
 from datetime import datetime
 from flask import Flask, request, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
@@ -7,6 +9,9 @@ from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 
 load_dotenv()
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
@@ -19,15 +24,12 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(INSTANCE_FOLDER, exist_ok=True)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-DB_USER = os.getenv('DB_USER', 'postgres')
-DB_PASSWORD = os.getenv('DB_PASSWORD', 'postgres')
-DB_HOST = os.getenv('DB_HOST', 'localhost')
-DB_PORT = os.getenv('DB_PORT', '5432')
-DB_NAME = os.getenv('DB_NAME', 'vault_db')
-
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:martin@localhost:5432/stylevault'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "pool_pre_ping": True,
+    "pool_recycle": 300,
+}
 
 db = SQLAlchemy(app)
 
@@ -37,6 +39,7 @@ class VaultItem(db.Model):
     user_id = db.Column(db.String(100), nullable=False, index=True)
     url = db.Column(db.String(300), nullable=False)
     description = db.Column(db.Text, default="")
+    tags = db.Column(db.JSON, default=list)
     display_order = db.Column(db.Integer, default=0)
 
     def to_dict(self):
@@ -45,6 +48,7 @@ class VaultItem(db.Model):
             "user_id": self.user_id,
             "url": self.url,
             "description": self.description,
+            "tags": self.tags or [],
             "display_order": self.display_order
         }
 
@@ -136,7 +140,13 @@ def update_profile():
 
             profile.avatar_url = f"/static/uploads/{user_id}/{unique_filename}"
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Profile update error: {e}")
+        return jsonify({"error": "Database error"}), 500
+
     return jsonify(profile.to_dict())
 
 
@@ -176,17 +186,24 @@ def upload_images():
 
         item = VaultItem(
             user_id=user_id,
-            url=f"/static/uploads/{user_id}/{unique_filename}"
+            url=f"/static/uploads/{user_id}/{unique_filename}",
+            tags=[]
         )
         db.session.add(item)
         new_items.append(item)
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Upload commit error: {e}")
+        return jsonify({"error": "Database error"}), 500
+
     return jsonify([item.to_dict() for item in new_items]), 201
 
 
 @app.route('/api/vault/<int:item_id>', methods=['PUT'])
-def update_description(item_id):
+def update_vault_item(item_id):
     user_id = get_current_user_id()
     if not user_id:
         return jsonify({"error": "Unauthorized"}), 401
@@ -195,8 +212,20 @@ def update_description(item_id):
     if not item or item.user_id != user_id:
         return jsonify({"error": "Item not found"}), 404
 
-    item.description = request.json.get('description', item.description)
-    db.session.commit()
+    data = request.get_json() or {}
+    if 'description' in data:
+        item.description = data['description']
+        
+    if 'tags' in data:
+        item.tags = data['tags']
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Vault update commit error: {e}")
+        return jsonify({"error": "Database error during save"}), 500
+
     return jsonify(item.to_dict())
 
 
@@ -215,7 +244,13 @@ def delete_item(item_id):
         os.remove(file_path)
 
     db.session.delete(item)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Delete commit error: {e}")
+        return jsonify({"error": "Database error"}), 500
+
     return jsonify({"success": True}), 200
 
 
@@ -230,7 +265,13 @@ def reorder_items():
         if item and item.user_id == user_id:
             item.display_order = position
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Reorder commit error: {e}")
+        return jsonify({"error": "Database error"}), 500
+
     return jsonify({"success": True})
 
 
@@ -274,7 +315,13 @@ def create_community_post():
     )
 
     db.session.add(post)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Community post commit error: {e}")
+        return jsonify({"error": "Database error"}), 500
+
     return jsonify(post.to_dict()), 201
 
 
@@ -296,8 +343,56 @@ def delete_community_post(post_id):
         os.remove(file_path)
 
     db.session.delete(post)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Community delete commit error: {e}")
+        return jsonify({"error": "Database error"}), 500
+
     return jsonify({"success": True}), 200
+
+
+@app.route('/api/weather-advice', methods=['GET'])
+def get_weather_advice():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    city = request.args.get('city', 'Toronto')
+    
+    try:
+        res = requests.get(f"https://wttr.in/{city}?format=j1", timeout=5)
+        data = res.json()
+        current = data['current_condition'][0]
+        temp_c = int(current['temp_C'])
+        desc = current['weatherDesc'][0]['value'].lower()
+    except Exception as e:
+        logger.error(f"Weather fetch error: {e}")
+        temp_c = 15
+        desc = "clear"
+
+    if temp_c < 5:
+        advice = "Freezing temperatures outside. Layer up with heavy outerwear, beanies, and knitwear."
+        editorial_note = "Sub-zero structure. Anchor the silhouette with heavy wool textures, layered outerwear, and deep monochrome layering."
+        suggested_tag = "Winter"
+    elif temp_c < 15:
+        advice = "Crisp transition weather. A chore jacket, hoodie, or heavy sweater will keep you comfortable."
+        editorial_note = "A transitional study in weight. Balance clean lines with a heavy chore jacket or relaxed overshirt."
+        suggested_tag = "Fall"
+    else:
+        advice = "Warm conditions. Keep your fit lightweight and breathable."
+        editorial_note = "Effortless breathability. Prioritize lightweight draping, open collars, and minimal hardware."
+        suggested_tag = "Summer"
+
+    return jsonify({
+        "city": city,
+        "temperature": temp_c,
+        "condition": desc,
+        "advice": advice,
+        "editorialNote": editorial_note,
+        "suggestedTag": suggested_tag
+    })
 
 
 @app.route('/static/uploads/<user_id>/<filename>')

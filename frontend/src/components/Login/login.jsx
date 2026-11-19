@@ -26,7 +26,6 @@ const Login = () => {
     setTimeout(() => setPopup({ show: false, message: "" }), 3000);
   };
 
-  // Helper function to sync sign-up display name with Flask backend
   const syncProfileToBackend = async (userId, displayName) => {
     try {
       const formData = new FormData();
@@ -45,23 +44,25 @@ const Login = () => {
   const handleEmailAuth = async (e) => {
     e.preventDefault(); 
     try {
+      let userId;
       if (currState === "Sign Up") {
-        // 1. Create account in Firebase
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
+        userId = user.uid;
 
-        // 2. Attach display name to Firebase Auth profile & sync to Flask
         if (name.trim()) {
           await updateProfile(user, { displayName: name.trim() });
-          await syncProfileToBackend(user.uid, name.trim());
+          await syncProfileToBackend(userId, name.trim());
         }
 
         triggerPopup("Account created successfully!");
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        userId = userCredential.user.uid;
         triggerPopup("Welcome back!");
       }
       
+      localStorage.setItem('user_id', userId);
       setTimeout(() => navigate('/main'), 1500); 
 
     } catch (error) {
@@ -79,8 +80,11 @@ const Login = () => {
   const handleFacebookLogin = async () => {
     try {
       const res = await signInWithPopup(auth, facebookProvider);
-      if (res.user?.displayName) {
-        await syncProfileToBackend(res.user.uid, res.user.displayName);
+      if (res.user) {
+        localStorage.setItem('user_id', res.user.uid);
+        if (res.user.displayName) {
+          await syncProfileToBackend(res.user.uid, res.user.displayName);
+        }
       }
       triggerPopup("Logged in with Facebook");
       setTimeout(() => navigate('/main'), 1500);
@@ -90,8 +94,11 @@ const Login = () => {
   const handleGoogleLogin = async () => {
     try {
       const res = await signInWithPopup(auth, googleProvider);
-      if (res.user?.displayName) {
-        await syncProfileToBackend(res.user.uid, res.user.displayName);
+      if (res.user) {
+        localStorage.setItem('user_id', res.user.uid);
+        if (res.user.displayName) {
+          await syncProfileToBackend(res.user.uid, res.user.displayName);
+        }
       }
       triggerPopup("Logged in with Google");
       setTimeout(() => navigate('/main'), 1500);
@@ -107,8 +114,10 @@ const Login = () => {
       )}
 
       <form className="login-container" onSubmit={handleEmailAuth}>
-        <div className="login-logo">
-           <img src={assets.logo} alt="Stylevault Logo" />
+        {/* Editorial Brand Header matching Home.jsx */}
+        <div className="login-brand" onClick={() => navigate('/')}>
+          <span className="brand-wordmark">Stylevault</span>
+          <img src={assets.site} alt="Stylevault Logo" className="login-logo-icon" />
         </div>
 
         <div className="login-title">
